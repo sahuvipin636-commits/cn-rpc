@@ -50,6 +50,13 @@ The lowest factor is the reason code.
   prior, 56% last-call rule. Weakest split: recycled vs switched_off. Outputs:
   state_features.parquet (cutoff, link, p_<state>, p_alive, p_owned_given_alive,
   p_avoid_given_owned) for all 13 cutoffs + 30 Jun; state_model.json.
+- Stage 5: RPCModel (models.py) = alive x answer x owned LightGBM heads (beats direct model
+  slightly), features = Stage 3 snapshot + Stage 4 states + hour/dow/is_bot/lang_match.
+  Validation: per-call AUC 0.685, per contact point next-7-day AUC 0.702, well calibrated raw
+  (isotonic per portfolio tested, made log-loss worse, so apply_calibration=False). MFI is
+  over-predicted on validation (0.140 vs 0.109). Random arm: no selection bias seen.
+  Best hour mostly 08:00, then 18:00 (model estimate). Saved: data/processed/rpc_model.pkl.
+  Label columns (y_*, next_*) are blocked from features by feature_columns() + test.
 - Not in data: SMS delivery, WhatsApp, MNRL, payment-link events (production add-ons only).
 
 ## Stage roadmap
@@ -60,8 +67,8 @@ The lowest factor is the reason code.
 | 2 | src/rpc/remarks.py, src/rpc/agents.py | remark tags (3 languages), agent reliability | done |
 | 3 | src/rpc/features.py, src/rpc/labels.py | weekly as-of snapshots + labels | done |
 | 4 | src/rpc/states.py | hidden-state filter, checked on gold (train/val) | done |
-| 5 | src/rpc/models.py | RPC + best-hour models, IPS weights, calibration | next |
-| 6 | src/rpc/safety.py, src/rpc/decide.py | suppression, actions, reason codes, trace EV | |
+| 5 | src/rpc/models.py | RPC + best-hour models, IPS weights, calibration | done |
+| 6 | src/rpc/safety.py, src/rpc/decide.py | suppression, actions, reason codes, trace EV | next |
 | 7 | src/rpc/evaluate.py | AUC/calibration, gold accuracy, IPS policy value, trace replay | |
 | 8 | addresses, app/streamlit_app.py, write-up | field extension, dashboard | |
 

@@ -63,7 +63,8 @@ def attempt_table(E: pd.DataFrame, snaps: pd.DataFrame, agents: pd.DataFrame, cu
         "y_rejected": e.rejected, "y_rpc_soft": e.rpc_soft, "y_rpc_logged": e.logged_rpc,
         "y_tp": e.logged_tp, "y_wrong": e.logged_wrong,
     })
-    feats = snaps.drop(columns=[c for c in ["dialling_arm"] if c in snaps.columns])
+    # never carry next-week labels into the attempt table: they are outcomes, not features
+    feats = snaps.drop(columns=[c for c in snaps.columns if c == "dialling_arm" or c.startswith("next_")])
     out = a.merge(feats, on=["cutoff", "link"], how="inner").copy()
     out["lang_match"] = out.agent_lang.eq("all") | out.agent_lang.eq(out.preferred_language)
     out.attrs["dropped_no_snapshot"] = len(a) - len(out)
