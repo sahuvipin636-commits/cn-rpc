@@ -65,6 +65,14 @@ The lowest factor is the reason code.
   fitted on train; trace blocked if a live borrower-owned number exists; TraceModel (logistic,
   val AUC 0.72, reject rate strongest negative); assign_hours greedy within dialler capacity;
   schedule_visits by field capacity. Outputs: numbers_plan/account_plan.parquet, reports/*.csv.
+- Stage 7 (TEST touched once; do not tune anything on these results): reports/scorecard.md.
+  State model test gold 89% acc (vs 75% prior, 67% last-call) but log-loss 0.97 vs 0.82: two
+  overconfident misses because repeated calls are treated as independent evidence (fix: temper
+  repeated evidence; NOT applied post-test). Per-call AUC 0.694, contact point AUC 0.704.
+  Random-arm SNIPS (val+test, 34 accounts): 153 vs 135 RPC/1,000 (CI -12 to +47, not significant).
+  Unprotected strangers 33 vs 50 per 1,000. Traces out of sample: keep 20/243, Rs 2,059 vs 25,029,
+  7 vs 53 phones; skipped accounts reached on existing numbers 32% vs 15% kept. Stopped numbers
+  got 8.2% of test dials at 2.6% contact vs 17% overall.
 - Not in data: SMS delivery, WhatsApp, MNRL, payment-link events (production add-ons only).
 
 ## Stage roadmap
@@ -77,8 +85,8 @@ The lowest factor is the reason code.
 | 4 | src/rpc/states.py | hidden-state filter, checked on gold (train/val) | done |
 | 5 | src/rpc/models.py | RPC + best-hour models, IPS weights, calibration | done |
 | 6 | src/rpc/safety.py, src/rpc/decide.py | suppression, actions, reason codes, trace EV | done |
-| 7 | src/rpc/evaluate.py | AUC/calibration, gold accuracy, IPS policy value, trace replay | next |
-| 8 | addresses, app/streamlit_app.py, write-up | field extension, dashboard | |
+| 7 | src/rpc/evaluate.py | AUC/calibration, gold accuracy, IPS policy value, trace replay | done |
+| 8 | addresses, app/streamlit_app.py, write-up | field extension, dashboard | next |
 
 ## Non-negotiable rules
 1. As-of discipline: a feature for cutoff date D uses only events with timestamp < D.

@@ -195,6 +195,23 @@ def _reason(r) -> str:
     return f"Wait: nothing is worth its cost now; {call}, visit nets Rs {r.ev_visit:,.0f}.{blocked}"
 
 
+# ---------------------------------------------------------------- scoring numbers at a date
+def score_numbers(D, rows: pd.DataFrame, SF: pd.DataFrame, model) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Every number at its best hour (agent), plus bot probability and the three factors at that hour.
+    rows: snapshot rows at D. Returns (numbers, P(RPC) by hour)."""
+    D = pd.Timestamp(D)
+    n = rows.merge(SF[SF.cutoff == D].drop(columns="cutoff"), on="link", how="left")
+    n = n.assign(dow=D.dayofweek, is_bot=False, lang_match=True).reset_index(drop=True)
+    grid = model.by_hour(n, is_bot=False)
+    n["best_hour"] = grid.idxmax(axis=1)
+    n["p_rpc_agent"] = grid.max(axis=1)
+    at_best = n.assign(hour=n.best_hour)
+    n["p_rpc_bot"] = model.predict(at_best.assign(is_bot=True)).p_rpc.to_numpy()
+    raw = model.raw(at_best)
+    n["f_alive"], n["f_answer"], n["f_owned"] = raw.alive.to_numpy(), raw.answer.to_numpy(), raw.owned.to_numpy()
+    return n, grid
+
+
 # ---------------------------------------------------------------- dialler capacity
 def assign_hours(plan: pd.DataFrame, by_hour: pd.DataFrame, capacity: dict) -> pd.DataFrame:
     """Greedy: highest-value calls first, each to its best hour that still has capacity."""

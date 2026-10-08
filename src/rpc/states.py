@@ -88,6 +88,13 @@ class StateModel:
         self.smoothing = smoothing
         self._P = {}
 
+    @classmethod
+    def from_json(cls, d: dict) -> "StateModel":
+        m = cls(d["decay_scale"], d["avoid_scale"])
+        m.Q, m.B = np.array(d["Q"]), np.array(d["B"])
+        m.pi = {k: np.array(v) for k, v in d["pi"].items()}
+        return m
+
     # ---------- building blocks ----------
     def P(self, dt: float) -> np.ndarray:
         k = round(max(dt, 0.0), 1)

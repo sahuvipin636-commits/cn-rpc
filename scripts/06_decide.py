@@ -3,6 +3,7 @@ Run from the repo root (after Stage 5):  python scripts/06_decide.py
 Writes data/processed/{numbers_plan, account_plan}.parquet, reports/{06_decide.md,
 suppression_list.csv, trace_queue.csv, call_plan.csv}
 """
+import pickle
 import sys
 import time
 from pathlib import Path
@@ -17,7 +18,7 @@ from rpc.labels import weekly_cutoffs, assign_cutoff, SCORING_CUTOFF
 from rpc.models import RPCModel
 from rpc.safety import apply_safety, tune_threshold, tune_precision, DEFAULTS
 from rpc.decide import (fit_value_params, account_aggregates, TraceModel, field_options, decide, assign_hours,
-                         schedule_visits)
+                         schedule_visits, score_numbers)
 
 pd.set_option("display.width", 220); pd.set_option("display.max_colwidth", 200)
 out = []
@@ -27,20 +28,6 @@ def section(title, body):
     text = body if isinstance(body, str) else body.to_string()
     out.append(f"## {title}\n\n```\n{text}\n```\n")
     print(f"\n=== {title}\n{text}")
-
-
-def numbers_at(D, rows, SF, model):
-    """Score every number at its best hour (agent), plus bot probability and factor heads at that hour."""
-    n = rows.merge(SF[SF.cutoff == D].drop(columns="cutoff"), on="link", how="left")
-    n = n.assign(dow=D.dayofweek, is_bot=False, lang_match=True).reset_index(drop=True)
-    grid = model.by_hour(n, is_bot=False)
-    n["best_hour"] = grid.idxmax(axis=1)
-    n["p_rpc_agent"] = grid.max(axis=1)
-    at_best = n.assign(hour=n.best_hour)
-    n["p_rpc_bot"] = model.predict(at_best.assign(is_bot=True)).p_rpc.to_numpy()
-    raw = model.raw(at_best)
-    n["f_alive"], n["f_answer"], n["f_owned"] = raw.alive.to_numpy(), raw.answer.to_numpy(), raw.owned.to_numpy()
-    return n, grid
 
 
 t0 = time.time()
@@ -94,7 +81,7 @@ section("4. Trace model (finds a new phone)", "\n".join([
     "coefficients (standardised):", tm.coefficients().round(2).to_string()]))
 
 # 4. the plan for 30 June
-n, grid = numbers_at(D, scoring, SF, model)
+n, grid = score_numbers(D, scoring, SF, model)
 n = n.join(apply_safety(n, th))
 fields = field_options(D, t, rf, params)
 plan, nplan = decide(n, t["accounts"], params, tm, fields)
@@ -124,6 +111,9 @@ section("9. Avoiders: traces prevented", f"{len(blocked)} accounts hold a live b
         f"actions: {blocked.action.value_counts().to_dict()}")
 
 nplan.to_parquet(PROCESSED / "numbers_plan.parquet", index=False)
+with open(PROCESSED / "decision_config.pkl", "wb") as f:      # reused by Stage 7
+    pickle.dump({"thresholds": th, "params": params, "trace_model": tm, "capacity": capacity,
+                 "visits_per_day": visits_per_day}, f)
 plan.to_parquet(PROCESSED / "account_plan.parquet", index=False)
 REPORTS.mkdir(exist_ok=True)
 n[n.status.isin(["suppress_recycled", "locate_only"])][["account_id", "phone_id", "status", "safety_reason"]] \
