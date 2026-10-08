@@ -4,6 +4,6 @@ scipy>=1.11
 scikit-learn>=1.4
 lightgbm>=4.3
 rapidfuzz>=3.6
-streamlit>=1.35
+streamlit>=1.48
 pytest>=8
 pyarrow>=15

@@ -24,3 +24,4 @@ DEAD_RESPONSES = {"switched_off", "not_reachable", "number_does_not_exist"}
 
 GOLD_STATUSES = ["borrower_number", "third_party_number", "not_borrower_number",
                  "switched_off", "invalid_number"]
+SCORING_DATE_LABEL = "30 June 2026"

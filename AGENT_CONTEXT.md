@@ -86,7 +86,7 @@ The lowest factor is the reason code.
 | 5 | src/rpc/models.py | RPC + best-hour models, IPS weights, calibration | done |
 | 6 | src/rpc/safety.py, src/rpc/decide.py | suppression, actions, reason codes, trace EV | done |
 | 7 | src/rpc/evaluate.py | AUC/calibration, gold accuracy, IPS policy value, trace replay | done |
-| 8 | addresses, app/streamlit_app.py, write-up | field extension, dashboard | next |
+| 8 | addresses, app/streamlit_app.py, write-up | field extension, dashboard | done |
 
 ## Non-negotiable rules
 1. As-of discipline: a feature for cutoff date D uses only events with timestamp < D.
