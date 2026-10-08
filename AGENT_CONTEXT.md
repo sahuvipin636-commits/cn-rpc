@@ -39,6 +39,12 @@ The lowest factor is the reason code.
 - Agent trust: shrunk gold-based rate (train only) + RPC-on-unanswered. Peer comparison was
   tested and rejected (disagrees with gold). Outputs: data/processed/agent_reliability.csv,
   attempt_trust.parquet (rpc_trust per logged RPC; 0 if call was unanswered).
+- Stage 3 outputs (data/processed): snapshots.parquet (13 weekly cutoffs, 1 Apr to 24 Jun,
+  122 cols, next-7-day labels), scoring_snapshot.parquet (as of 30 Jun, for the 2 Jul gold),
+  attempts_model.parquet (each call joined to its week's features; y_alive, y_picked,
+  y_answered, y_rpc_soft, y_tp, y_wrong; hour, is_bot, propensity).
+  A number added on day D is known on day D. tests/test_asof.py proves no future leakage.
+  Known assumption: agent trust is an agent-level parameter fitted on train gold.
 - Not in data: SMS delivery, WhatsApp, MNRL, payment-link events (production add-ons only).
 
 ## Stage roadmap
@@ -47,8 +53,8 @@ The lowest factor is the reason code.
 | 0 | repo, specs | AGENT_CONTEXT.md, SCHEMA.md | done |
 | 1 | src/rpc/io.py, scripts/01_audit.py | validated loaders, data audit report | done |
 | 2 | src/rpc/remarks.py, src/rpc/agents.py | remark tags (3 languages), agent reliability | done |
-| 3 | src/rpc/features.py, src/rpc/labels.py | weekly as-of snapshots + labels | next |
-| 4 | src/rpc/states.py | hidden-state filter, checked on gold (train/val) | |
+| 3 | src/rpc/features.py, src/rpc/labels.py | weekly as-of snapshots + labels | done |
+| 4 | src/rpc/states.py | hidden-state filter, checked on gold (train/val) | next |
 | 5 | src/rpc/models.py | RPC + best-hour models, IPS weights, calibration | |
 | 6 | src/rpc/safety.py, src/rpc/decide.py | suppression, actions, reason codes, trace EV | |
 | 7 | src/rpc/evaluate.py | AUC/calibration, gold accuracy, IPS policy value, trace replay | |
