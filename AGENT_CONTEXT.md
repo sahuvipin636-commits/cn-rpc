@@ -57,6 +57,14 @@ The lowest factor is the reason code.
   over-predicted on validation (0.140 vs 0.109). Random arm: no selection bias seen.
   Best hour mostly 08:00, then 18:00 (model estimate). Saved: data/processed/rpc_model.pkl.
   Label columns (y_*, next_*) are blocked from features by feature_columns() + test.
+- Stage 6: safety.py statuses: dial, verify_first, suppress_recycled, locate_only, drop_invalid,
+  pause_dead. Two tiers tuned on train gold: low (90% recall) -> verify_first, high (90% precision)
+  -> suppress. Hard suppression only on explicit "new number" remark or high model confidence; a
+  single stranger answering -> verify_first. Validation gold: 16/16 risky protected, 0/23 borrower
+  numbers blocked. decide.py: EV in rupees for call (agent or bot), visit, trace, wait; values
+  fitted on train; trace blocked if a live borrower-owned number exists; TraceModel (logistic,
+  val AUC 0.72, reject rate strongest negative); assign_hours greedy within dialler capacity;
+  schedule_visits by field capacity. Outputs: numbers_plan/account_plan.parquet, reports/*.csv.
 - Not in data: SMS delivery, WhatsApp, MNRL, payment-link events (production add-ons only).
 
 ## Stage roadmap
@@ -68,8 +76,8 @@ The lowest factor is the reason code.
 | 3 | src/rpc/features.py, src/rpc/labels.py | weekly as-of snapshots + labels | done |
 | 4 | src/rpc/states.py | hidden-state filter, checked on gold (train/val) | done |
 | 5 | src/rpc/models.py | RPC + best-hour models, IPS weights, calibration | done |
-| 6 | src/rpc/safety.py, src/rpc/decide.py | suppression, actions, reason codes, trace EV | next |
-| 7 | src/rpc/evaluate.py | AUC/calibration, gold accuracy, IPS policy value, trace replay | |
+| 6 | src/rpc/safety.py, src/rpc/decide.py | suppression, actions, reason codes, trace EV | done |
+| 7 | src/rpc/evaluate.py | AUC/calibration, gold accuracy, IPS policy value, trace replay | next |
 | 8 | addresses, app/streamlit_app.py, write-up | field extension, dashboard | |
 
 ## Non-negotiable rules
