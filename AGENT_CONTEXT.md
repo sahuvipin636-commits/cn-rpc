@@ -45,6 +45,11 @@ The lowest factor is the reason code.
   y_answered, y_rpc_soft, y_tp, y_wrong; hour, is_bot, propensity).
   A number added on day D is known on day D. tests/test_asof.py proves no future leakage.
   Known assumption: agent trust is an agent-level parameter fitted on train gold.
+- Stage 4: continuous-time state model (states.py), fitted on train accounts only, EM emissions,
+  train gold anchors the 2 Jul state. Validation gold: 95% accuracy (41 numbers) vs 80% source
+  prior, 56% last-call rule. Weakest split: recycled vs switched_off. Outputs:
+  state_features.parquet (cutoff, link, p_<state>, p_alive, p_owned_given_alive,
+  p_avoid_given_owned) for all 13 cutoffs + 30 Jun; state_model.json.
 - Not in data: SMS delivery, WhatsApp, MNRL, payment-link events (production add-ons only).
 
 ## Stage roadmap
@@ -54,8 +59,8 @@ The lowest factor is the reason code.
 | 1 | src/rpc/io.py, scripts/01_audit.py | validated loaders, data audit report | done |
 | 2 | src/rpc/remarks.py, src/rpc/agents.py | remark tags (3 languages), agent reliability | done |
 | 3 | src/rpc/features.py, src/rpc/labels.py | weekly as-of snapshots + labels | done |
-| 4 | src/rpc/states.py | hidden-state filter, checked on gold (train/val) | next |
-| 5 | src/rpc/models.py | RPC + best-hour models, IPS weights, calibration | |
+| 4 | src/rpc/states.py | hidden-state filter, checked on gold (train/val) | done |
+| 5 | src/rpc/models.py | RPC + best-hour models, IPS weights, calibration | next |
 | 6 | src/rpc/safety.py, src/rpc/decide.py | suppression, actions, reason codes, trace EV | |
 | 7 | src/rpc/evaluate.py | AUC/calibration, gold accuracy, IPS policy value, trace replay | |
 | 8 | addresses, app/streamlit_app.py, write-up | field extension, dashboard | |
