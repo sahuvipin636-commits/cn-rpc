@@ -34,6 +34,11 @@ The lowest factor is the reason code.
 - Some agents log third parties as RPC; some RPCs are logged on unanswered calls.
 - Salaried and daily-wage borrowers answer best at 8am and 6pm; incumbent dials mostly before 1pm.
 - Remarks: Hinglish, Kanglish (romanised Kannada), English, with typos.
+- Remarks mirror dispositions 99.9%, so they cannot expose mislogging. Their value is
+  detail: new_owner vs not_known, long_off, who answered, evening callback, met at home/shop/work.
+- Agent trust: shrunk gold-based rate (train only) + RPC-on-unanswered. Peer comparison was
+  tested and rejected (disagrees with gold). Outputs: data/processed/agent_reliability.csv,
+  attempt_trust.parquet (rpc_trust per logged RPC; 0 if call was unanswered).
 - Not in data: SMS delivery, WhatsApp, MNRL, payment-link events (production add-ons only).
 
 ## Stage roadmap
@@ -41,8 +46,8 @@ The lowest factor is the reason code.
 |---|---|---|---|
 | 0 | repo, specs | AGENT_CONTEXT.md, SCHEMA.md | done |
 | 1 | src/rpc/io.py, scripts/01_audit.py | validated loaders, data audit report | done |
-| 2 | src/rpc/remarks.py, src/rpc/agents.py | remark tags (3 languages), agent reliability | next |
-| 3 | src/rpc/features.py, src/rpc/labels.py | weekly as-of snapshots + labels | |
+| 2 | src/rpc/remarks.py, src/rpc/agents.py | remark tags (3 languages), agent reliability | done |
+| 3 | src/rpc/features.py, src/rpc/labels.py | weekly as-of snapshots + labels | next |
 | 4 | src/rpc/states.py | hidden-state filter, checked on gold (train/val) | |
 | 5 | src/rpc/models.py | RPC + best-hour models, IPS weights, calibration | |
 | 6 | src/rpc/safety.py, src/rpc/decide.py | suppression, actions, reason codes, trace EV | |
